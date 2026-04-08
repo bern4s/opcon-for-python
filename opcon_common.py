@@ -297,18 +297,12 @@ class OpConResHead:
         nioBits=None,
         machineId=None,
     ):
-        if (result is not None) and (result not in self.VALID_RESULTS):
-            raise ValueError(f"result must be one of {self.VALID_RESULTS}")
-        self._result = result
-
-        if (workingCode is not None) and (workingCode < 0 or workingCode > 15):
-            raise ValueError("workingCode must be between 0 and 15")
-        self._workingCode = workingCode
-
-        self._typeNo = typeNo
-        self._typeVar = typeVar
-        self._nioBits = nioBits
-        self._machineId = machineId
+        self.result = result
+        self.workingCode = workingCode
+        self.typeNo = typeNo
+        self.typeVar = typeVar
+        self.nioBits = nioBits
+        self.machineId = machineId
 
     @property
     def result(self):
@@ -316,7 +310,7 @@ class OpConResHead:
 
     @result.setter
     def result(self, result):
-        if result not in self.VALID_RESULTS:
+        if result is not None and result not in self.VALID_RESULTS:
             raise ValueError(f"result must be one of {self.VALID_RESULTS}")
         self._result = result
 
@@ -409,3 +403,54 @@ def NewOpConResHead(
     if machineId is not None:
         resHead.machineId = machineId
     return resHead
+
+
+class OpConItem:
+    VALID_DATA_TYPES = [2, 3, 4, 5, 7, 8, 11, 14, 16, 17, 18, 19, 20, 21]
+
+    def __init__(self, name=None, value=None, dataType=None):
+        self.name = name
+        self.value = value
+        self.dataType = dataType
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+    @property
+    def dataType(self):
+        return self._dataType
+
+    @dataType.setter
+    def dataType(self, dataType):
+        if dataType is not None and dataType not in self.VALID_DATA_TYPES:
+            raise ValueError(f"Invalid dataType: {dataType}")
+        self._dataType = dataType
+
+    def update(self, telegram):
+        node = ET.fromstring(telegram)
+        item_node = node.findall("body/items/item")
+        itemsNames = [item.get("name") for item in item_node]
+
+        if self.name is not None and self.name not in itemsNames:
+            items_node = node.find("body/items")
+            if items_node is None:
+                raise ValueError("Telegram does not contain an items node")
+            new_item = ET.SubElement(items_node, "item")
+            new_item.set("name", str(self.name))
+            if self.value is not None:
+                new_item.set("value", str(self.value))
+            if self.dataType is not None:
+                new_item.set("dataType", str(self.dataType))

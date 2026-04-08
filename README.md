@@ -1,3 +1,3 @@
 # OpCon for Python
 
-The goal is to develop a python library that manipulates XML telegrams and sends them to DDL.
+This module provides a library to connect to NEXEED installations via OpConXML, send telegrams and verify the response
