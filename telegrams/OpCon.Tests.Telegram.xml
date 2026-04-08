@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<root>
+    <header eventId="0" eventName="partReceived" version="1.0" eventSwitch="-1" contentType="3">
+        <location lineNo="666" statNo="7001" statIdx="1" fuNo="1" workPos="1" toolPos="1"
+            application="PLC" processName="EOL" processNo="1000" />
+    </header>
+    <event>
+        <partReceived identifier="PLS1SZxMILx0023" typeVar="0001" typeNo="0000907081" typeVersion="" />
+    </event>
+    <body>
+        <structs>
+            <resHead result="1" typeNo="0000907081" typeVar="0001" workingCode="0" nioBits="1"
+                machineID="None" />
+        </structs>
+        <items>
+            <item name="matId" value="" dataType="8" />
+            <item name="routeList" value="SMT_SIP_bottom_1st_side_2SPP" dataType="8" />
+            <item name="supermarketName" value="SMT_EOL_Transfer_OK" dataType="8" />
+        </items>
+        <structArrays>
+            <array name="results">
+                <structDef>
+                    <item name="pos" dataType="3" />
+                    <item name="result" dataType="2" />
+                    <item name="nioBits" dataType="3" />
+                    <item name="identifier" dataType="8" />
+                    <item name="targetIdx" dataType="2" />
+                    <item name="state" dataType="2" />
+                </structDef>
+                <values>
+                    <item pos="1" result="1" nioBits="0" identifier="PLS1SZxMILx1023" targetIdx="1"
+                        state="4" />
+                    <item pos="2" result="1" nioBits="0" identifier="PLS1SZxMILx2023" targetIdx="1"
+                        state="4" />
+                    <item pos="3" result="1" nioBits="0" identifier="PLS1SZxMILx3023" targetIdx="1"
+                        state="4" />
+                    <item pos="4" result="1" nioBits="0" identifier="PLS1SZxMILx4023" targetIdx="1"
+                        state="4" />
+                    <item pos="5" result="1" nioBits="0" identifier="PLS1SZxMILx5023" targetIdx="1"
+                        state="4" />
+                    <item pos="6" result="1" nioBits="0" identifier="PLS1SZxMILx6023" targetIdx="1"
+                        state="4" />
+                </values>
+            </array>
+        </structArrays>
+        <structs />
+    </body>
+</root>

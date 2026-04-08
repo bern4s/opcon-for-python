@@ -272,4 +272,140 @@ def NewOpConEvent(
         event.typeNo = opConEvent.typeNo
         event.typeVar = opConEvent.typeVar
 
+    if group is not None:
+        # TODO: implement the group logic
+        pass
+    else:
+        if identifier is not None:
+            event.identifier = identifier
+        if typeNo is not None:
+            event.typeNo = typeNo
+        if typeVar is not None:
+            event.typeVar = typeVar
     return event
+
+
+class OpConResHead:
+    VALID_RESULTS = [-1, 0, 1, 2, 12]
+
+    def __init__(
+        self,
+        result=None,
+        typeNo=None,
+        typeVar=None,
+        workingCode=None,
+        nioBits=None,
+        machineId=None,
+    ):
+        if (result is not None) and (result not in self.VALID_RESULTS):
+            raise ValueError(f"result must be one of {self.VALID_RESULTS}")
+        self._result = result
+
+        if (workingCode is not None) and (workingCode < 0 or workingCode > 15):
+            raise ValueError("workingCode must be between 0 and 15")
+        self._workingCode = workingCode
+
+        self._typeNo = typeNo
+        self._typeVar = typeVar
+        self._nioBits = nioBits
+        self._machineId = machineId
+
+    @property
+    def result(self):
+        return self._result
+
+    @result.setter
+    def result(self, result):
+        if result not in self.VALID_RESULTS:
+            raise ValueError(f"result must be one of {self.VALID_RESULTS}")
+        self._result = result
+
+    @property
+    def typeNo(self):
+        return self._typeNo
+
+    @typeNo.setter
+    def typeNo(self, typeNo):
+        self._typeNo = typeNo
+
+    @property
+    def typeVar(self):
+        return self._typeVar
+
+    @typeVar.setter
+    def typeVar(self, typeVar):
+        self._typeVar = typeVar
+
+    @property
+    def workingCode(self):
+        return self._workingCode
+
+    @workingCode.setter
+    def workingCode(self, workingCode):
+        if workingCode is not None and (workingCode < 0 or workingCode > 15):
+            raise ValueError("workingCode must be between 0 and 15")
+        self._workingCode = workingCode
+
+    @property
+    def nioBits(self):
+        return self._nioBits
+
+    @nioBits.setter
+    def nioBits(self, nioBits):
+        self._nioBits = nioBits
+
+    @property
+    def machineId(self):
+        return self._machineId
+
+    @machineId.setter
+    def machineId(self, machineId):
+        self._machineId = machineId
+
+    def update(self, telegram):
+        node = ET.fromstring(telegram)
+        resHead_node = node.find("body/structs/resHead")
+
+        if resHead_node is None:
+            raise ValueError("Telegram does not contain a resHead node")
+        if self._result is not None:
+            resHead_node.set("result", str(self.result))
+        if self._typeNo is not None:
+            resHead_node.set("typeNo", str(self.typeNo))
+        if self._typeVar is not None:
+            resHead_node.set("typeVar", str(self.typeVar))
+        if self._workingCode is not None:
+            resHead_node.set("workingCode", str(self.workingCode))
+        if self._nioBits is not None:
+            resHead_node.set("nioBits", str(self.nioBits))
+        if self._machineId is not None:
+            resHead_node.set("machineId", str(self.machineId))
+        return ET.tostring(node)
+
+
+def NewOpConResHead(
+    opConEvent=None,
+    result=None,
+    typeNo=None,
+    typeVar=None,
+    workingCode=None,
+    nioBits=None,
+    machineId=None,
+) -> OpConResHead:
+    resHead = OpConResHead()
+    if opConEvent is not None:
+        resHead.typeNo = opConEvent.typeNo
+        resHead.typeVar = opConEvent.typeVar
+    if result is not None:
+        resHead.result = result
+    if typeNo is not None:
+        resHead.typeNo = typeNo
+    if typeVar is not None:
+        resHead.typeVar = typeVar
+    if workingCode is not None:
+        resHead.workingCode = workingCode
+    if nioBits is not None:
+        resHead.nioBits = nioBits
+    if machineId is not None:
+        resHead.machineId = machineId
+    return resHead

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<root>
+    <header eventId="0" eventName="partReceived" version="1.0" eventSwitch="105" contentType="3">
+        <location lineNo="666" statNo="9999" statIdx="1" fuNo="1" workPos="1" toolPos="1"
+            application="PLC" processName="" processNo="0" />
+    </header>
+    <event>
+        <partReceived identifier="" typeVar="" typeNo="" typeVersion="" />
+    </event>
+    <body>
+        <structs />
+    </body>
+</root>
