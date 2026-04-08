@@ -28,8 +28,10 @@ class TestOpConHeader:
         header = NewOpConHeader(self.HEADER_NUMBER)
         updated_telegram = header.update(TELEGRAM)
         parsed_xml = ET.fromstring(updated_telegram)
-        telegram_event_switch = parsed_xml.find("header").get("eventSwitch")
+        header_node = parsed_xml.find("header")
 
+        assert header_node is not None
+        telegram_event_switch = header_node.get("eventSwitch")
         assert telegram_event_switch == str(self.HEADER_NUMBER)
 
     def test_invalid_header_event_switch(self):
@@ -77,6 +79,7 @@ class TestOpConLocation:
         parsed_xml = ET.fromstring(updated_telegram)
         location_node = parsed_xml.find("header/location")
 
+        assert location_node is not None
         assert location_node.get("lineNo") == "1234"
         assert location_node.get("statNo") == "888"
         assert location_node.get("statIdx") == "50"
@@ -118,6 +121,7 @@ class TestOpConLocation:
         parsed_xml = ET.fromstring(updated_telegram)
         location_node = parsed_xml.find("header/location")
 
+        assert location_node is not None
         assert location_node.get("lineNo") == "666"
         assert location_node.get("statNo") == "321"
         assert location_node.get("statIdx") == "123"
