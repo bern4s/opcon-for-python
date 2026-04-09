@@ -159,24 +159,20 @@ class OpConLocation:
         if node is None:
             raise ValueError("Telegram does not contain a location node")
 
-        if self._lineNo is not None:
-            node.set("lineNo", str(self._lineNo))
-        if self._statNo is not None:
-            node.set("statNo", str(self._statNo))
-        if self._statIdx is not None:
-            node.set("statIdx", str(self._statIdx))
-        if self._fuNo is not None:
-            node.set("fuNo", str(self._fuNo))
-        if self._workPos is not None:
-            node.set("workPos", str(self._workPos))
-        if self._toolPos is not None:
-            node.set("toolPos", str(self._toolPos))
-        if self._application is not None:
-            node.set("application", self._application)
-        if self._processName is not None:
-            node.set("processName", self._processName)
-        if self._processNo is not None:
-            node.set("processNo", str(self._processNo))
+        attrs = {
+            "lineNo": self.lineNo,
+            "statNo": self.statNo,
+            "statIdx": self.statIdx,
+            "fuNo": self.fuNo,
+            "workPos": self.workPos,
+            "toolPos": self.toolPos,
+            "application": self.application,
+            "processName": self.processName,
+            "processNo": self.processNo,
+        }
+        for attr_name, value in attrs.items():
+            if value is not None:
+                node.set(attr_name, str(value))
         return ET.tostring(tree)
 
 
@@ -491,21 +487,24 @@ def NewOpConMaterialItems(label, labelType=LabelType.MAT):
             self._itemName = itemName
             self._itemDefaultValue = itemDefaultValue
             self._itemDataType = itemDataType
-        
+
         @property
         def valuePrefix(self):
             return self._valuePrefix
+
         @property
         def itemName(self):
             return self._itemName
+
         @property
         def itemDefaultValue(self):
             return self._itemDefaultValue
+
         @property
         def itemDataType(self):
             return self._itemDataType
 
-    materials =[]
+    materials = []
     if labelType == LabelType.MAT:
         materials.append(MaterialItem("@1T(.*)@2T", "Component1.Batch1", "", 8))
         materials.append(MaterialItem("@2T(.*)@1Z", "Component1.Batch2", "", 8))
@@ -531,16 +530,16 @@ def NewOpConMaterialItems(label, labelType=LabelType.MAT):
             MaterialItem("@K(.*)@16K", "Component1.PurchaseOrderNo", "", 8)
         )
         materials.append(
-            MaterialItem("@Q(\d*)\D*\d*@20T", "Component1.Quantity", "0.0", 5)
+            MaterialItem("@Q(\\d*)\\D*\\d*@20T", "Component1.Quantity", "0.0", 5)
         )
         materials.append(
-            MaterialItem("@Q(\d*)\D*\d*@20T", "Component1.QuantityRaw", "0.0", 5)
+            MaterialItem("@Q(\\d*)\\D*\\d*@20T", "Component1.QuantityRaw", "0.0", 5)
         )
         materials.append(
-            MaterialItem("@Q\d*(\D*)\d*@20T", "Component1.QuantityUnit", "", 8)
+            MaterialItem("@Q\\d*(\\D*)\\d*@20T", "Component1.QuantityUnit", "", 8)
         )
         materials.append(
-            MaterialItem("@Q\d*(\D*)\d*@20T", "Component1.QuantityUnitRaw", "", 8)
+            MaterialItem("@Q\\d*(\\D*)\\d*@20T", "Component1.QuantityUnitRaw", "", 8)
         )
         materials.append(MaterialItem("@30P(.*)@Z", "Component1.RoHS", "", 8))
         materials.append(MaterialItem("@16K(.*)@V", "Component1.ShippingNoteNo", "", 8))
@@ -550,7 +549,7 @@ def NewOpConMaterialItems(label, labelType=LabelType.MAT):
         materials.append(MaterialItem("@2P(.*)@20P", "Component1.TypeVar", "", 8))
         materials.append(MaterialItem("", "labelFormat", "2", 3))
         materials.append(MaterialItem("@12S(.*)@P", "labelVersion", "2", 3))
-    
+
     if labelType == LabelType.GTL:
         materials.append(MaterialItem("1T(.*)Q", "Component1.Batch1", "", 8))
         materials.append(MaterialItem("", "Component1.Batch2", "", 8))
@@ -584,24 +583,25 @@ def NewOpConMaterialItems(label, labelType=LabelType.MAT):
         v = m.group(1) if m else mat.itemDefaultValue
         yield NewOpConItem(name=mat.itemName, value=v, dataType=mat.itemDataType)
 
+
 class OpConStructArray:
     def __init__(self, name=None, structDef=None, data=None):
         self.name = name
         self.structDef = structDef
         self.data = data
-    
+
     @property
     def name(self):
         return self._name
-    
+
     @name.setter
     def name(self, name):
         self._name = name
-    
+
     @property
     def structDef(self):
         return self._structDef
-    
+
     @structDef.setter
     def structDef(self, structDef):
         self._structDef = structDef
@@ -609,11 +609,11 @@ class OpConStructArray:
     @property
     def data(self):
         return self._data
-    
+
     @data.setter
     def data(self, data):
         self._data = data
-    
+
     def update(self, telegram):
         arrayName = self.name
         tree = ET.fromstring(telegram)
@@ -632,7 +632,7 @@ class OpConStructArray:
                         node.set(attr, val)
 
         return ET.tostring(tree)
-    
+
     def __eq__(self, other) -> bool:
         if self.name == other.name:
             if self.structDef == other.structDef:
@@ -646,33 +646,36 @@ class OpConStructArray:
         return json.dumps(
             {"name": self.name, "structDef": self.structDef, "data": self.data}
         )
-    
+
+
 def NewOpConStructArray(name):
     structArray = OpConStructArray()
     structArray.name = name
     structArray.data = []
     return structArray
 
+
 class OpConStructArrayValue:
     def __init__(self, selectors=None, attributes=None):
         self.selectors = selectors
         self.attributes = attributes
-    
+
     @property
     def selectors(self):
         return self._selectors
-    
+
     @selectors.setter
     def selectors(self, selectors):
         self._selectors = selectors
-    
+
     @property
     def attributes(self):
         return self._attributes
-    
+
     @attributes.setter
     def attributes(self, attributes):
         self._attributes = attributes
+
 
 def AddOpConStructArrayValue(structArray, selectors, attributes):
     structArrayValues = OpConStructArrayValue()
@@ -681,18 +684,29 @@ def AddOpConStructArrayValue(structArray, selectors, attributes):
     structArray.data.append(structArrayValues)
     return structArray
 
+
 def AddOpConStructArrayStructDef(structArray, name, dataType):
     structArrayValues = OpConStructArrayValue()
     structArrayValues.attributes = {"name": name, "dataType": str(dataType)}
     structArray.structDef.append(structArrayValues)
     return structArray
 
+
 def AddOpConStructArrayResult(structArray, selectors, pos=1, result=1, nioBits=0, identifier=None, targetIdx=1, state=4):
     structArrayValue = OpConStructArrayValue()
     structArrayValue.selectors = selectors
-    structArrayValue.attributes = {"pos": pos, "result": result, "nioBits": nioBits, "identifier": identifier, "targetIdx": targetIdx, "state": state}
+    structArrayValue.attributes = {
+        "pos": pos,
+        "result": result,
+        "nioBits": nioBits,
+        "identifier": identifier,
+        "targetIdx": targetIdx,
+        "state": state
+        }
+
     structArray.data.append(structArrayValue)
     return structArray
+
 
 def NewOpConResultsStructArray(group):
     results = NewOpConStructArray("results")
@@ -701,24 +715,25 @@ def NewOpConResultsStructArray(group):
         AddOpConStructArrayResult(results, selectors=selectors, pos=part.pos, identifier=part.identifier)
     return results
 
+
 class OpConArray:
     def __init__(self, name=None, dataType=None, data=None):
         self.name = name
         self.dataType = dataType
         self.data = data
-    
+
     @property
     def name(self):
         return self._name
-    
+
     @name.setter
     def name(self, name):
         self._name = name
-    
+
     @property
     def dataType(self):
         return self._dataType
-    
+
     @dataType.setter
     def dataType(self, dataType):
         self._dataType = dataType
@@ -726,11 +741,11 @@ class OpConArray:
     @property
     def data(self):
         return self._data
-    
+
     @data.setter
     def data(self, data):
         self._data = data
-    
+
     def update(self, telegram):
         arrayName = self.name
         tree = ET.fromstring(telegram)
@@ -745,7 +760,7 @@ class OpConArray:
                 has = True
                 for selector in value.selectors.keys():
                     has = has and (node.get(selector) == value.selectors[selector])
-                
+
                 if has:
                     data = value
                     for attr in data.attributes.keys():
@@ -756,13 +771,13 @@ class OpConArray:
                 has = True
                 for selector in value.selectors.keys():
                     has = has and (node.get(selector) == value.selectors[selector])
-                
+
                 if has:
                     data = value
                     for attr in data.attributes.keys():
                         node.set(attr, data.attributes[attr])
         return ET.tostring(tree)
-    
+
     def __eq__(self, other) -> bool:
         if (self.name == other.name) and (self.dataType == other.dataType) and (self.data == other.data):
             return True
