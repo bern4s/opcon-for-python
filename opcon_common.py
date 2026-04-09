@@ -737,12 +737,38 @@ class OpConArray:
         values = tree.find(f"body/{arrayName}")
         valuesSubArray = tree.find(f"body/arrays/array[@name='{arrayName}']")
 
-        if values is None:
+        if values is None or valuesSubArray is None:
             return
 
         for value in self.data:
             for node in values:
                 has = True
                 for selector in value.selectors.keys():
-                    pass
+                    has = has and (node.get(selector) == value.selectors[selector])
                 
+                if has:
+                    data = value
+                    for attr in data.attributes.keys():
+                        node.set(attr, data.attributes[attr])
+
+        for value in self.data:
+            for node in valuesSubArray:
+                has = True
+                for selector in value.selectors.keys():
+                    has = has and (node.get(selector) == value.selectors[selector])
+                
+                if has:
+                    data = value
+                    for attr in data.attributes.keys():
+                        node.set(attr, data.attributes[attr])
+        return ET.tostring(tree)
+    
+    def __eq__(self, other) -> bool:
+        if (self.name == other.name) and (self.dataType == other.dataType) and (self.data == other.data):
+            return True
+        return False
+
+    def __str__(self) -> str:
+        return json.dumps(
+            {"name": self.name, "dataType": self.dataType, "data": self.data}
+        )
