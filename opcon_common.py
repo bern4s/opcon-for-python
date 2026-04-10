@@ -1019,8 +1019,8 @@ class OpConTestRule:
         OpConTestComparator.EQ: lambda val, expected: bool(val) and val == expected,
         OpConTestComparator.NEQ: lambda val, expected: bool(val) and val != expected,
         OpConTestComparator.Contains: lambda val, expected: bool(val) and expected in val,
-        OpConTestComparator.Absent: lambda val, expected: not val,
-        OpConTestComparator.Exists: lambda val, expected: bool(val),
+        OpConTestComparator.Absent: lambda val, _: not val,
+        OpConTestComparator.Exists: lambda val, _: bool(val),
     }
 
     def _get_node_value(self, node):
