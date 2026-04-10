@@ -1,7 +1,7 @@
 import re
 import json
 import xml.etree.ElementTree as ET
-from opcon_enums import LabelType
+from opcon_enums import LabelType, OpConTestComparator
 
 
 class OpConHeader:
@@ -787,3 +787,278 @@ class OpConArray:
         return json.dumps(
             {"name": self.name, "dataType": self.dataType, "data": self.data}
         )
+
+
+class OpConArrayValue:
+    def __init__(self, selectors=None, attributes=None):
+        self.selectors = selectors
+        self.attributes = attributes
+
+    @property
+    def selectors(self):
+        return self._selectors
+
+    @selectors.setter
+    def selectors(self, selectors):
+        self._selectors = selectors
+
+    @property
+    def attributes(self):
+        return self._attributes
+
+    @attributes.setter
+    def attributes(self, attributes):
+        self._attributes = attributes
+
+
+def NewOpConArray(name, dataType):
+    opConArray = OpConArray()
+    opConArray.name = name
+    opConArray.dataType = dataType
+    opConArray.data = []
+    return opConArray
+
+
+def AddOpConArrayValue(array, selectors, attributes):
+    arrayValue = OpConArrayValue()
+    arrayValue.selectors = selectors
+    arrayValue.attributes = attributes
+    array.data.append(arrayValue)
+    return array
+
+
+class OpConPart:
+    def __init__(self, pos=None, identifier=None):
+        self.pos = pos
+        self.identifier = identifier
+
+    @property
+    def pos(self):
+        return self._pos
+
+    @pos.setter
+    def pos(self, pos):
+        self._pos = pos
+
+    @property
+    def identifier(self):
+        return self._identifier
+
+    @identifier.setter
+    def identifier(self, identifier):
+        self._identifier = identifier
+
+
+class OpConGroup:
+    def __init__(self, identifier=None, parts=None):
+        self.identifier = identifier
+        self.parts = parts
+
+    @property
+    def identifier(self):
+        return self._identifier
+
+    @identifier.setter
+    def identifier(self, identifier):
+        self._identifier = identifier
+
+    @property
+    def parts(self):
+        return self._parts
+
+    @parts.setter
+    def parts(self, parts):
+        self._parts = parts
+
+
+def NewOpConGroups(idetifier, format, start=1, parts=0, count=0):
+    for i in range(0, count, 1):
+        groupIdentifier = f"{idetifier}{format}".format(0, i + start)
+        partsArray = []
+        for j in range(0, parts, 1):
+            partIdentifier = f"{idetifier}{format}".format(j + 1, i + start)
+            partObject = OpConPart((j + 1), partIdentifier)
+            partsArray.append(partObject)
+        groupObject = OpConGroup(groupIdentifier, partsArray)
+        return groupObject
+
+
+def GetOpConPartsInGroups(groups):
+    for group in groups:
+        for part in group.parts:
+            yield part
+
+
+def EditOpConTelegram(telegram, eventData=None, header=None,
+                      location=None, resHead=None, items=None, structArrays=None, arrays=None):
+    if eventData is not None:
+        telegram = eventData.update(telegram)
+
+    if header is not None:
+        telegram = header.update(telegram)
+
+    if location is not None:
+        telegram = location.update(telegram)
+
+    if resHead is not None:
+        telegram = resHead.update(telegram)
+
+    if items is not None:
+        for item in items:
+            telegram = item.update(telegram)
+
+    if structArrays is not None:
+        for structArray in structArrays:
+            telegram = structArray.update(telegram)
+
+    if arrays is not None:
+        for array in arrays:
+            telegram = array.update(telegram)
+
+    return telegram
+
+
+class OpConTestRuleResult:
+    def __init__(self, rule=None, value=None, request=None, response=None, ok=None):
+        self.rule = rule
+        self.value = value
+        self.request = request
+        self.response = response
+        self.ok = ok
+
+    @property
+    def rule(self):
+        return self._rule
+
+    @rule.setter
+    def rule(self, rule):
+        self._rule = rule
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+    @property
+    def request(self):
+        return self._request
+
+    @request.setter
+    def request(self, request):
+        self._request = request
+
+    @property
+    def response(self):
+        return self._response
+
+    @response.setter
+    def response(self, response):
+        self._response = response
+
+    @property
+    def ok(self):
+        return self._ok
+
+    @ok.setter
+    def ok(self, ok):
+        self._ok = ok
+
+    def __str__(self):
+        return json.dumps({
+            "rule": self.rule,
+            "value": self.value,
+            "request": self.request,
+            "response": self.response,
+            "ok": self.ok
+        })
+
+
+class OpConTestRule:
+    def __init__(self, xpath=None, negative=None, comparator=None, value=None):
+        self.xpath = xpath
+        self.negative = negative
+        self.comparator = comparator
+        self.value = value
+
+    @property
+    def xpath(self):
+        return self._xpath
+
+    @xpath.setter
+    def xpath(self, xpath):
+        self._xpath = xpath
+
+    @property
+    def negative(self):
+        return self._negative
+
+    @negative.setter
+    def negative(self, negative):
+        self._negative = negative
+
+    @property
+    def comparator(self):
+        return self._comparator
+
+    @comparator.setter
+    def comparator(self, comparator):
+        self._comparator = comparator
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+    def execute(self, request, telegram):
+        if (self.xpath is None):
+            raise ValueError("xpath must be defined to execute the test rule")
+
+        ok = False
+        tree = ET.fromstring(telegram)
+        node = tree.find(self.xpath)
+
+        if node is not None:
+            if node.text:
+                val = node.text
+            else:
+                # Get inner XML (equivalent to InnerXml)
+                val = (node.text or '') + ''.join(ET.tostring(child, encoding='unicode') for child in node)
+
+            if val is None:
+                val = ""
+            if self.value is None:
+                self.value = ""
+
+            if self.comparator == OpConTestComparator.EQ:
+                if (val):
+                    ok = val == self.value
+            elif self.comparator == OpConTestComparator.NEQ:
+                if (val):
+                    ok = val != self.value
+            elif self.comparator == OpConTestComparator.Contains:
+                if (val):
+                    ok = self.value in val
+            elif self.comparator == OpConTestComparator.Absent:
+                if (not val):
+                    ok = True
+            elif self.comparator == OpConTestComparator.Exists:
+                if (val):
+                    ok = True
+            else:
+                raise ValueError(f"Unsupported comparator: {self.comparator}")
+
+            rule = OpConTestRuleResult()
+            rule.rule = self
+            rule.request = request
+            rule.response = telegram
+            rule.ok = ok
+            rule.value = val
+            return rule
+        else:
+            raise ValueError(f"XPath '{self.xpath}' did not match any nodes in the telegram")
