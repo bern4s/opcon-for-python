@@ -1015,50 +1015,42 @@ class OpConTestRule:
     def value(self, value):
         self._value = value
 
+    _comparators = {
+        OpConTestComparator.EQ: lambda val, expected: bool(val) and val == expected,
+        OpConTestComparator.NEQ: lambda val, expected: bool(val) and val != expected,
+        OpConTestComparator.Contains: lambda val, expected: bool(val) and expected in val,
+        OpConTestComparator.Absent: lambda val, expected: not val,
+        OpConTestComparator.Exists: lambda val, expected: bool(val),
+    }
+
+    def _get_node_value(self, node):
+        if node.text:
+            return node.text
+        # Get inner XML (equivalent to InnerXml)
+        return (node.text or '') + ''.join(ET.tostring(child, encoding='unicode') for child in node)
+
     def execute(self, request, telegram):
-        if (self.xpath is None):
+        if self.xpath is None:
             raise ValueError("xpath must be defined to execute the test rule")
 
-        ok = False
         tree = ET.fromstring(telegram)
         node = tree.find(self.xpath)
 
-        if node is not None:
-            if node.text:
-                val = node.text
-            else:
-                # Get inner XML (equivalent to InnerXml)
-                val = (node.text or '') + ''.join(ET.tostring(child, encoding='unicode') for child in node)
-
-            if val is None:
-                val = ""
-            if self.value is None:
-                self.value = ""
-
-            if self.comparator == OpConTestComparator.EQ:
-                if (val):
-                    ok = val == self.value
-            elif self.comparator == OpConTestComparator.NEQ:
-                if (val):
-                    ok = val != self.value
-            elif self.comparator == OpConTestComparator.Contains:
-                if (val):
-                    ok = self.value in val
-            elif self.comparator == OpConTestComparator.Absent:
-                if (not val):
-                    ok = True
-            elif self.comparator == OpConTestComparator.Exists:
-                if (val):
-                    ok = True
-            else:
-                raise ValueError(f"Unsupported comparator: {self.comparator}")
-
-            rule = OpConTestRuleResult()
-            rule.rule = self
-            rule.request = request
-            rule.response = telegram
-            rule.ok = ok
-            rule.value = val
-            return rule
-        else:
+        if node is None:
             raise ValueError(f"XPath '{self.xpath}' did not match any nodes in the telegram")
+
+        val = self._get_node_value(node) or ""
+        if self.value is None:
+            self.value = ""
+
+        comparator_fn = self._comparators.get(self.comparator)
+        if comparator_fn is None:
+            raise ValueError(f"Unsupported comparator: {self.comparator}")
+
+        rule = OpConTestRuleResult()
+        rule.rule = self
+        rule.request = request
+        rule.response = telegram
+        rule.ok = comparator_fn(val, self.value)
+        rule.value = val
+        return rule
