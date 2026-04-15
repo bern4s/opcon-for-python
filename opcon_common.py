@@ -1055,14 +1055,15 @@ class OpConTestRule:
         rule.value = val
         return rule
 
+
 def NewOpConTestRule(xpath, value, negative=None, eq=None, neq=None, contains=None, absent=None, exists=None):
     rule = OpConTestRule()
-    
+
     if (negative is not None):
         rule.negative = negative
     else:
         rule.negative = False
-    
+
     rule.xpath = xpath
     rule.value = value
 
@@ -1117,10 +1118,10 @@ def GetOpConCommonTelegrams():
 def GetOpConTelegramValue(telegram, xpath):
     tree = ET.fromstring(telegram)
     node = tree.find(xpath)
-    
+
     if node is None:
         return None
-    
+
     if node.text:
         return node.text
 
@@ -1134,20 +1135,20 @@ def GetOpConTelegramValue(telegram, xpath):
 def GetOpConItem(telegram, name):
     tree = ET.fromstring(telegram)
     node = tree.find(f"body/items/item[@name='{name}']")
-    
+
     if node is None:
         return None
-    
+
     return OpConItem(name=node.get("name"), value=node.get("value"), dataType=node.get("dataType"))
 
 
 def GetOpConArray(telegram, name):
     tree = ET.fromstring(telegram)
     arrayNode = tree.find(f"body/arrays/array[@name='{name}']")
-    
+
     if arrayNode is None:
         return None
-    
+
     nodeName = arrayNode.get('name')
     nodeDataType = arrayNode.get('dataType')
 
@@ -1159,19 +1160,19 @@ def GetOpConArray(telegram, name):
         arrayValue = OpConArrayValue()
         arrayValue.attributes = {"value": item.get("value")}
         array.data.append(arrayValue)
-    
+
     return array
 
 
 def GetOpConStructArray(telegram, name):
     tree = ET.fromstring(telegram)
     node = tree.find(f"/root/body/structArrays/array[@name='{name}']")
-    
+
     if node is None:
         return None
-    
-    array = OpConStructArray(name = node.get("name"))
-    
+
+    array = OpConStructArray(name=node.get("name"))
+
     attrNames = []
     sd = node.findall(f"/root/body/structArrays/array[@name='{name}']/structDef/item")
 
