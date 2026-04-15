@@ -587,8 +587,8 @@ def NewOpConMaterialItems(label, labelType=LabelType.MAT):
 class OpConStructArray:
     def __init__(self, name=None, structDef=None, data=None):
         self.name = name
-        self.structDef = structDef
-        self.data = data
+        self._structDef = []
+        self._data = []
 
     @property
     def name(self):
@@ -604,7 +604,7 @@ class OpConStructArray:
 
     @structDef.setter
     def structDef(self, structDef):
-        self._structDef = structDef
+        self._structDef.append(structDef)
 
     @property
     def data(self):
@@ -612,7 +612,7 @@ class OpConStructArray:
 
     @data.setter
     def data(self, data):
-        self._data = data
+        self._data.append(data)
 
     def update(self, telegram):
         arrayName = self.name
@@ -720,7 +720,7 @@ class OpConArray:
     def __init__(self, name=None, dataType=None, data=None):
         self.name = name
         self.dataType = dataType
-        self.data = data
+        self._data = []
 
     @property
     def name(self):
@@ -744,7 +744,7 @@ class OpConArray:
 
     @data.setter
     def data(self, data):
-        self._data = data
+        self._data.append(data)
 
     def update(self, telegram):
         arrayName = self.name
@@ -871,12 +871,12 @@ class OpConGroup:
         self._parts = parts
 
 
-def NewOpConGroups(idetifier, format, start=1, parts=0, count=0):
+def NewOpConGroups(identifier, format, start=1, parts=0, count=0):
     for i in range(0, count, 1):
-        groupIdentifier = f"{idetifier}{format}".format(0, i + start)
+        groupIdentifier = f"{identifier}{format}".format(0, i + start)
         partsArray = []
         for j in range(0, parts, 1):
-            partIdentifier = f"{idetifier}{format}".format(j + 1, i + start)
+            partIdentifier = f"{identifier}{format}".format(j + 1, i + start)
             partObject = OpConPart((j + 1), partIdentifier)
             partsArray.append(partObject)
         groupObject = OpConGroup(groupIdentifier, partsArray)
@@ -1054,3 +1054,132 @@ class OpConTestRule:
         rule.ok = comparator_fn(val, self.value)
         rule.value = val
         return rule
+
+def NewOpConTestRule(xpath, value, negative=None, eq=None, neq=None, contains=None, absent=None, exists=None):
+    rule = OpConTestRule()
+    
+    if (negative is not None):
+        rule.negative = negative
+    else:
+        rule.negative = False
+    
+    rule.xpath = xpath
+    rule.value = value
+
+    if eq is not None:
+        rule.comparator = OpConTestComparator.EQ
+    elif neq is not None:
+        rule.comparator = OpConTestComparator.NEQ
+    elif contains is not None:
+        rule.comparator = OpConTestComparator.Contains
+    elif absent is not None:
+        rule.comparator = OpConTestComparator.Absent
+    elif exists is not None:
+        rule.comparator = OpConTestComparator.Exists
+    else:
+        raise ValueError("At least one comparator must be specified")
+    return rule
+
+
+def InvokeOpConTestRule(rule, request, response):
+    rule.execute(request, response)
+
+
+def GetOpConCommonTestRules():
+    rules = {
+        "ReturnCode_0": NewOpConTestRule(xpath="/root/event/result/@returnCode", value=0, eq=True),
+        "ReturnCode_-2": NewOpConTestRule(xpath="/root/event/result/@returnCode", value=-2, eq=True),
+        "ReturnCode_-1": NewOpConTestRule(xpath="/root/event/result/@returnCode", value=-1, eq=True),
+    }
+    return rules
+
+
+def GetOpConCommonTelegrams():
+    opConTesterCommonTelegrams = {
+        "PartGroupCreate": "./common/PartGroupCreate.xml",
+        "PartGroupMoveToSupermarket": "./common/PartGroupMoveToSupermarket.xml",
+        "PartGroupDelete": "./common/PartGroupDelete.xml",
+        "PartGroupGet": "./common/PartGroupGet.xml",
+        "PartGroupGetAdditionalDatas": "./common/PartGroupGetAdditionalDatas.xml",
+        "MaterialCreate": "./common/MaterialCreate.xml",
+        "MaterialDeleteBlocks": "./common/MaterialDeleteBlocks.xml",
+        "MaterialGet": "./common/MaterialGet.xml",
+        "MaterialVerify": "./common/MaterialVerify.xml",
+        "MaterialOpen": "./common/MaterialOpen.xml",
+        "MaterialClose": "./common/MaterialClose.xml",
+        "MaterialAdjustExposureTime": "./common/MaterialAdjustExposureTime.xml",
+        "MaterialSetup": "./common/MaterialSetup.xml",
+        "MaterialTeardown": "./common/MaterialTeardown.xml",
+    }
+    return opConTesterCommonTelegrams
+
+
+def GetOpConTelegramValue(telegram, xpath):
+    tree = ET.fromstring(telegram)
+    node = tree.find(xpath)
+    
+    if node is None:
+        return None
+    
+    if node.text:
+        return node.text
+
+    inner_xml = ''.join(ET.tostring(child, encoding='unicode') for child in node)
+    if inner_xml:
+        return inner_xml
+
+    return ET.tostring(node, encoding='unicode')
+
+
+def GetOpConItem(telegram, name):
+    tree = ET.fromstring(telegram)
+    node = tree.find(f"body/items/item[@name='{name}']")
+    
+    if node is None:
+        return None
+    
+    return OpConItem(name=node.get("name"), value=node.get("value"), dataType=node.get("dataType"))
+
+
+def GetOpConArray(telegram, name):
+    tree = ET.fromstring(telegram)
+    arrayNode = tree.find(f"body/arrays/array[@name='{name}']")
+    
+    if arrayNode is None:
+        return None
+    
+    nodeName = arrayNode.get('name')
+    nodeDataType = arrayNode.get('dataType')
+
+    array = OpConArray(name=nodeName, dataType=nodeDataType)
+
+    items = tree.findall(f"body/arrays/array[@name='{name}']/item")
+
+    for item in items:
+        arrayValue = OpConArrayValue()
+        arrayValue.attributes = {"value": item.get("value")}
+        array.data.append(arrayValue)
+    
+    return array
+
+
+def GetOpConStructArray(telegram, name):
+    tree = ET.fromstring(telegram)
+    node = tree.find(f"/root/body/structArrays/array[@name='{name}']")
+    
+    if node is None:
+        return None
+    
+    array = OpConStructArray(name = node.get("name"))
+    
+    attrNames = []
+    sd = node.findall(f"/root/body/structArrays/array[@name='{name}']/structDef/item")
+
+    for i in range(len(sd) - 1, 0, -1):
+        arrayValue = OpConStructArrayValue()
+        itemName = sd[i].get("name")
+        attrNames.append(itemName)
+
+        itemDataType = sd[i].get("dataType")
+        arrayValue.attributes = {"name": itemName, "dataType": itemDataType}
+        array.structDef.append(arrayValue)
