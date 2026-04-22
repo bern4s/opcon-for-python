@@ -1176,7 +1176,7 @@ def GetOpConStructArray(telegram, name):
     attrNames = []
     sd = node.findall(f"/root/body/structArrays/array[@name='{name}']/structDef/item")
 
-    for i in range(len(sd) - 1, 0, -1):
+    for i in range(len(sd) - 1, -1, -1):
         arrayValue = OpConStructArrayValue()
         itemName = sd[i].get("name")
         attrNames.append(itemName)
@@ -1184,3 +1184,80 @@ def GetOpConStructArray(telegram, name):
         itemDataType = sd[i].get("dataType")
         arrayValue.attributes = {"name": itemName, "dataType": itemDataType}
         array.structDef.append(arrayValue)
+
+    v = tree.findall(f"/root/body/structArrays/array[@name='{name}']/values/item")
+    for item in v:
+        arrayValue = OpConStructArrayValue()
+        arrayValue.attributes = {}
+        for i in range(len(attrNames) - 1, -1, -1):
+            arrayValue.attributes[attrNames[i]] = item.get(attrNames[i])
+        array.data.append(arrayValue)
+
+    return array
+
+
+def CompareOpConTrace(trace1, trace2):
+    tree1 = ET.fromstring(trace1)
+    tree2 = ET.fromstring(trace2)
+    baseXpath = "event/trace/trace"
+
+    firstTelegramBase = tree1.find(baseXpath)
+    secondTelegramBase = tree2.find(baseXpath)
+
+    if firstTelegramBase is None or secondTelegramBase is None:
+        raise ValueError("Both traces must contain the base trace node")
+
+    traceText1 = firstTelegramBase.get("text")
+    traceCode1 = firstTelegramBase.get("code")
+    traceText2 = secondTelegramBase.get("text")
+    traceCode2 = secondTelegramBase.get("code")
+
+    diffs = []
+    if traceText1 is not None and traceText2 is not None and traceText1 != traceText2:
+        diffs.append(f"Trace: Left text attribute different to Right text attribute: {traceText1}:{traceText2}")
+    if traceCode1 is not None and traceCode2 is not None and traceCode1 != traceCode2:
+        diffs.append(f"Trace: Left code attribute different to Right code attribute: {traceCode1}:{traceCode2}")
+    return diffs
+
+
+def compareStructDefItems(left, right):
+    differences = []
+    for rightItem in right:
+        found = False
+        rightName = rightItem.get("name")
+        rightDataType = rightItem.get("dataType")
+
+        for leftItem in left:
+            leftName = leftItem.get("name")
+            leftDataType = leftItem.get("dataType")
+
+            if leftName == rightName and leftDataType == rightDataType:
+                found = True
+                break
+            if leftName == rightName and leftDataType != rightDataType:
+                differences.append(
+                    f"StructDef: Left item datatype different to Right item value: \
+                        {rightName} ({rightItem.get('value')}:{leftDataType})"
+                )
+                found = True
+                break
+
+        if not found:
+            differences.append(f"StructDef: Right not in Left: {rightName} (datatype={rightDataType})")
+
+    return differences
+
+
+def CompareOpConStructArray(left, right, arrayName):
+    tree1 = ET.fromstring(left)
+    tree2 = ET.fromstring(right)
+    structDefItemsXpath = f"body/structArrays/array[@name='{arrayName}']/structDef/item"
+
+    leftStructDefItemsNode = tree1.findall(structDefItemsXpath)
+    rightStructDefItemsNode = tree2.findall(structDefItemsXpath)
+
+    diffsLeft = compareStructDefItems(leftStructDefItemsNode, rightStructDefItemsNode)
+    diffsRight = compareStructDefItems(rightStructDefItemsNode, leftStructDefItemsNode)
+
+    diffs = diffsLeft + diffsRight
+    return diffs
