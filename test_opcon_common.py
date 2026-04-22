@@ -1,6 +1,6 @@
 import pytest
 import xml.etree.ElementTree as ET
-from opcon_common import NewOpConHeader, NewOpConLocation, NewOpConResHead, OpConResHead
+from opcon_common import *
 
 
 class TestOpConHeader:
@@ -200,3 +200,68 @@ class TestOpConResHead:
         assert res_head.typeVar == "0009"
         assert res_head.result == 1
         assert res_head.machineId == "Machine_99"
+
+
+class TestOpConItem:
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
+        f = open("telegrams/OpCon.Tests.Telegram.xml", "r")
+        self.telegram = f.read()
+        f.close()
+
+    def test_opcon_item_str(self):
+        packageIdItem = NewOpConItem("Component1.PackageId", 123456489, 16)
+        assert packageIdItem.__str__() == json.dumps(
+            {
+                "name": packageIdItem.name,
+                "value": packageIdItem.value,
+                "dataType": packageIdItem.dataType,
+            }
+        )
+
+    def test_opcon_item_equality(self):
+        item1 = NewOpConItem("Component1.PackageId", 123456489, 16)
+        item2 = NewOpConItem("Component1.PackageId", 123456489, 16)
+        item3 = NewOpConItem("Component1.PackageId", 987654321, 16)
+
+        assert item1 == item2
+        assert item1 != item3
+
+    def test_opcon_item_update(self):
+        VALID_DATA_TYPES = [2, 3, 4, 5, 7, 8, 11, 14, 16, 17, 18, 19, 20, 21]
+
+        for data_type in VALID_DATA_TYPES:
+            testItem = NewOpConItem("Test.Item", "TestValue", data_type)
+            updatedTelegram = testItem.update(self.telegram)
+            updatedTelegram = ET.fromstring(updatedTelegram)
+            targetNode = updatedTelegram.find("body/items/item[@name='Test.Item']")
+            assert targetNode is not None
+            assert targetNode.get("value") == "TestValue"
+            assert targetNode.get("dataType") == str(data_type)
+
+    def test_opcon_item_update_no_data_type(self):
+        testItem = NewOpConItem("Test.Item", "TestValue")
+        updatedTelegram = testItem.update(self.telegram)
+        updatedTelegram = ET.fromstring(updatedTelegram)
+        targetNode = updatedTelegram.find("body/items/item[@name='Test.Item']")
+        assert targetNode is not None
+        assert targetNode.get("value") == "TestValue"
+        assert targetNode.get("dataType") is None
+
+    def test_opcon_item_update_existing_item(self):
+        testItem = NewOpConItem("routeList", "testRouteList", 16)
+        updatedTelegram = testItem.update(self.telegram)
+        updatedTelegram = ET.fromstring(updatedTelegram)
+        numChildItems = len(updatedTelegram.findall("body/items/item"))
+        targetNode = updatedTelegram.find("body/items/item[@name='routeList']")
+        assert numChildItems == 3
+        assert targetNode is not None
+        assert targetNode.get("value") == "testRouteList"
+        assert targetNode.get("dataType") == "16"
+
+    def test_opcon_item_invalid_data_type(self):
+        invlid_data_types = [1, 6, 9, 10]
+        for dataType in invlid_data_types:
+            with pytest.raises(ValueError, match=f"Invalid dataType: {dataType}"):
+                NewOpConItem("Test.Item", "TestValue", dataType)

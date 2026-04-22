@@ -441,7 +441,7 @@ class OpConItem:
         node = ET.fromstring(telegram)
         item_node = node.findall("body/items/item")
         itemsNames = [item.get("name") for item in item_node]
-
+        new_item = None
         if self.name is not None and self.name not in itemsNames:
             items_node = node.find("body/items")
             if items_node is None:
@@ -449,12 +449,15 @@ class OpConItem:
 
             new_item = ET.SubElement(items_node, "item")
             new_item.set("name", str(self.name))
-            if self.value is not None:
-                new_item.set("value", str(self.value))
-            if self.dataType is not None:
-                new_item.set("dataType", str(self.dataType))
+        else:
+            new_item = node.find(f"body/items/item[@name='{self.name}']")
+        if self.value is not None and new_item is not None:
+            new_item.set("value", str(self.value))
+        if self.dataType is not None and new_item is not None:
+            new_item.set("dataType", str(self.dataType))
+        
+        return ET.tostring(node)
 
-    # TODO: validate if should use __eq__ or ==
     def __eq__(self, other) -> bool:
         if (
             self.name == other.name

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<root>
+    <header eventId="0" eventName="dataDownloadRequired" version="1.0" eventSwitch="10"
+        timeStamp="2026-04-22T07:12:37.0146925+02:00" contentType="3">
+        <location lineNo="666" statNo="500" statIdx="2" fuNo="1" workPos="0" toolPos="0"
+            application="PLC" processName="" processNo="0" />
+    </header>
+    <event>
+        <result returnCode="-2">MES detected a warning.</result>
+        <trace>
+            <trace level="warning" code="800100004"
+                text="The Mat-ID 'Dummy' is unknown. It does not exist in the database."
+                source="MatControlAccess" />
+        </trace>
+    </event>
+    <body>
+        <items>
+            <item name="labelFormat" value="" dataType="8" />
+            <item name="labelQuality" value="0" dataType="3" />
+            <item name="Component1.TypeNo" value="" dataType="8" />
+            <item name="Component1.ManufacturerTypeNo" value="" dataType="8" />
+            <item name="Component1.OrderingNo" value="" dataType="8" />
+            <item name="Component1.Manufacturer" value="" dataType="8" />
+            <item name="Component1.ManufacturerLocation" value="" dataType="8" />
+            <item name="Component1.TypeVar" value="" dataType="8" />
+            <item name="Component1.Revision" value="" dataType="8" />
+            <item name="Component1.PartAddInfo" value="" dataType="8" />
+            <item name="Component1.ProductionDate" value="" dataType="8" />
+            <item name="Component1.ExpirationDate" value="" dataType="8" />
+            <item name="Component1.RoHS" value="" dataType="8" />
+            <item name="Component1.MsLevel" value="" dataType="8" />
+            <item name="Component1.PurchaseOrderNo" value="" dataType="8" />
+            <item name="Component1.ShipNoteNo" value="" dataType="8" />
+            <item name="Component1.SupplierId" value="" dataType="8" />
+            <item name="Component1.PackageId" value="" dataType="8" />
+            <item name="Component1.Quantity" value="0" dataType="4" />
+            <item name="Component1.QuantityUnit" value="" dataType="8" />
+            <item name="Component1.BatchCounter" value="0" dataType="3" />
+            <item name="Component1.Batch1" value="" dataType="8" />
+            <item name="Component1.Batch2" value="" dataType="8" />
+            <item name="Component1.SupplierData" value="" dataType="8" />
+            <item name="Component1.RemainingQty" value="0" dataType="4" />
+            <item name="Component1.ExpirationDateTime" value="" dataType="8" />
+            <item name="Component1.ProductionDateTime" value="" dataType="8" />
+            <item name="Component1.SapGoodsReceiptTimestamp" value="" dataType="8" />
+            <item name="Component1.SapGoodsReceiptItemNumber" value="" dataType="8" />
+            <item name="Component1.SapExpirationDate" value="" dataType="8" />
+            <item name="Component1.SapBatchNumber" value="" dataType="8" />
+        </items>
+        <structArrays>
+            <array name="matBlocks">
+                <structDef>
+                    <item name="matID" dataType="8" />
+                    <item name="reasonID" dataType="3" />
+                    <item name="reasonText" dataType="8" />
+                </structDef>
+                <values />
+            </array>
+        </structArrays>
+    </body>
+</root>

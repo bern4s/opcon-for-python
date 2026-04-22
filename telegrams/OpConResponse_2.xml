@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<root>
+    <header eventId="0" eventName="dataDownloadRequired" version="1.0" eventSwitch="10"
+        timeStamp="2026-04-22T07:13:27.3492671+02:00" contentType="3">
+        <location lineNo="666" statNo="500" statIdx="2" fuNo="1" workPos="0" toolPos="0"
+            application="PLC" processName="" processNo="0" />
+    </header>
+    <event>
+        <result returnCode="-2">MES detected a warning.</result>
+        <trace>
+            <trace level="warning" code="800100101" text="Material is blocked."
+                source="MatControlAccess" />
+        </trace>
+    </event>
+    <body>
+        <items>
+            <item name="labelFormat" value="3" dataType="8" />
+            <item name="labelQuality" value="0" dataType="3" />
+            <item name="Component1.TypeNo" value="1234567890" dataType="8" />
+            <item name="Component1.ManufacturerTypeNo" value="AAABBB" dataType="8" />
+            <item name="Component1.OrderingNo" value="00" dataType="8" />
+            <item name="Component1.Manufacturer" value="Manufacturer" dataType="8" />
+            <item name="Component1.ManufacturerLocation" value="GER-SOMEWHERE" dataType="8" />
+            <item name="Component1.TypeVar" value="" dataType="8" />
+            <item name="Component1.Revision" value="" dataType="8" />
+            <item name="Component1.PartAddInfo" value="PartAddInfo" dataType="8" />
+            <item name="Component1.ProductionDate" value="20250820" dataType="8" />
+            <item name="Component1.ExpirationDate" value="20270422" dataType="8" />
+            <item name="Component1.RoHS" value="Y" dataType="8" />
+            <item name="Component1.MsLevel" value="3" dataType="8" />
+            <item name="Component1.PurchaseOrderNo" value="11" dataType="8" />
+            <item name="Component1.ShipNoteNo" value="111" dataType="8" />
+            <item name="Component1.SupplierId" value="9000" dataType="8" />
+            <item name="Component1.PackageId" value="B042207132540" dataType="8" />
+            <item name="Component1.Quantity" value="100" dataType="4" />
+            <item name="Component1.QuantityUnit" value="NAR" dataType="8" />
+            <item name="Component1.BatchCounter" value="1" dataType="3" />
+            <item name="Component1.Batch1" value="112" dataType="8" />
+            <item name="Component1.Batch2" value="" dataType="8" />
+            <item name="Component1.SupplierData" value="#MesTestSuite#" dataType="8" />
+            <item name="Component1.RemainingQty" value="100" dataType="4" />
+            <item name="Component1.ExpirationDateTime" value="20270422 000000" dataType="8" />
+            <item name="Component1.ProductionDateTime" value="20250820 000000" dataType="8" />
+            <item name="Component1.SapGoodsReceiptTimestamp" value="" dataType="8" />
+            <item name="Component1.SapGoodsReceiptItemNumber" value="" dataType="8" />
+            <item name="Component1.SapExpirationDate" value="" dataType="8" />
+            <item name="Component1.SapBatchNumber" value="" dataType="8" />
+        </items>
+        <structArrays>
+            <array name="matBlocks">
+                <structDef>
+                    <item name="matID" dataType="8" />
+                    <item name="reasonID" dataType="3" />
+                    <item name="reasonText" dataType="8" />
+                </structDef>
+                <values>
+                    <item matID="9000B042207132540" reasonID="1"
+                        reasonText="The material has not been released for manufacturing." />
+                </values>
+            </array>
+        </structArrays>
+    </body>
+</root>
