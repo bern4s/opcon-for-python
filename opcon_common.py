@@ -455,7 +455,7 @@ class OpConItem:
             new_item.set("value", str(self.value))
         if self.dataType is not None and new_item is not None:
             new_item.set("dataType", str(self.dataType))
-        
+
         return ET.tostring(node)
 
     def __eq__(self, other) -> bool:

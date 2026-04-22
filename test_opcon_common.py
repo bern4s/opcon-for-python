@@ -1,6 +1,7 @@
 import pytest
 import xml.etree.ElementTree as ET
-from opcon_common import *
+import opcon_common
+import json
 
 
 class TestOpConHeader:
@@ -13,11 +14,11 @@ class TestOpConHeader:
         f.close()
 
     def test_create_simple_header(self):
-        header = NewOpConHeader(self.HEADER_NUMBER)
+        header = opcon_common.NewOpConHeader(self.HEADER_NUMBER)
         assert header.event_switch == self.HEADER_NUMBER
 
     def test_update_header(self):
-        header = NewOpConHeader(self.HEADER_NUMBER)
+        header = opcon_common.NewOpConHeader(self.HEADER_NUMBER)
         updated_telegram = header.update(self.telegram)
         parsed_xml = ET.fromstring(updated_telegram)
         header_node = parsed_xml.find("header")
@@ -28,7 +29,7 @@ class TestOpConHeader:
 
     def test_invalid_header_event_switch(self):
         with pytest.raises(ValueError, match="event_switch must be a positive integer"):
-            NewOpConHeader(-1)
+            opcon_common.NewOpConHeader(-1)
 
 
 class TestOpConLocation:
@@ -39,7 +40,7 @@ class TestOpConLocation:
         f.close()
 
     def test_create_simple_location(self):
-        location = NewOpConLocation(
+        location = opcon_common.NewOpConLocation(
             lineNo=666,
             statNo=9999,
             statIdx=1,
@@ -62,7 +63,7 @@ class TestOpConLocation:
         assert location._processNo == 0
 
     def test_update_location(self):
-        location = NewOpConLocation(
+        location = opcon_common.NewOpConLocation(
             lineNo=1234,
             statNo=888,
             statIdx=50,
@@ -90,7 +91,7 @@ class TestOpConLocation:
 
     def test_location_id(self):
         locationId = "666.321.123.5.564.897"
-        location = NewOpConLocation(
+        location = opcon_common.NewOpConLocation(
             locationId=locationId,
             application="Test_App",
             processName="Test_Loc",
@@ -109,7 +110,7 @@ class TestOpConLocation:
 
     def test_update_location_id(self):
         locationId = "666.321.123.5.564.897"
-        location = NewOpConLocation(
+        location = opcon_common.NewOpConLocation(
             locationId=locationId,
             application="Test_App",
             processName="Test_Loc",
@@ -132,7 +133,7 @@ class TestOpConLocation:
 
     def test_invalid_location_fuNo(self):
         with pytest.raises(ValueError, match="fuNo must be between 1 and 9"):
-            NewOpConLocation(
+            opcon_common.NewOpConLocation(
                 lineNo=1234,
                 statNo=888,
                 statIdx=50,
@@ -154,7 +155,7 @@ class TestOpConResHead:
         f.close()
 
     def test_create_simple_res_head(self):
-        res_head = NewOpConResHead(
+        res_head = opcon_common.NewOpConResHead(
             result=1,
             typeNo=100,
             typeVar="0001",
@@ -170,7 +171,9 @@ class TestOpConResHead:
         assert res_head.machineId == "Machine_1"
 
     def test_update_res_head(self):
-        res_head = NewOpConResHead(result=12, typeNo=200, typeVar="Test_Res")
+        res_head = opcon_common.NewOpConResHead(
+            result=12, typeNo=200, typeVar="Test_Res"
+        )
         updated_telegram = res_head.update(self.telegram)
         parsed_xml = ET.fromstring(updated_telegram)
         res_head_node = parsed_xml.find("body/structs/resHead")
@@ -182,17 +185,17 @@ class TestOpConResHead:
 
     def test_invalid_result(self):
         with pytest.raises(ValueError, match="result must be one of"):
-            o = NewOpConResHead(typeNo=100, typeVar="Test")
+            o = opcon_common.NewOpConResHead(typeNo=100, typeVar="Test")
             o.result = 888
 
     def test_invalid_working_code(self):
         with pytest.raises(ValueError, match="workingCode must be between 0 and 15"):
-            o = NewOpConResHead(typeNo=100, typeVar="Test")
+            o = opcon_common.NewOpConResHead(typeNo=100, typeVar="Test")
             o.workingCode = 300
 
     def test_use_created_res_head(self):
-        res_head = NewOpConResHead(
-            opConEvent=OpConResHead(typeNo=1234, typeVar="0009"),
+        res_head = opcon_common.NewOpConResHead(
+            opConEvent=opcon_common.OpConResHead(typeNo=1234, typeVar="0009"),
             result=1,
             machineId="Machine_99",
         )
@@ -211,7 +214,7 @@ class TestOpConItem:
         f.close()
 
     def test_opcon_item_str(self):
-        packageIdItem = NewOpConItem("Component1.PackageId", 123456489, 16)
+        packageIdItem = opcon_common.NewOpConItem("Component1.PackageId", 123456489, 16)
         assert packageIdItem.__str__() == json.dumps(
             {
                 "name": packageIdItem.name,
@@ -221,9 +224,9 @@ class TestOpConItem:
         )
 
     def test_opcon_item_equality(self):
-        item1 = NewOpConItem("Component1.PackageId", 123456489, 16)
-        item2 = NewOpConItem("Component1.PackageId", 123456489, 16)
-        item3 = NewOpConItem("Component1.PackageId", 987654321, 16)
+        item1 = opcon_common.NewOpConItem("Component1.PackageId", 123456489, 16)
+        item2 = opcon_common.NewOpConItem("Component1.PackageId", 123456489, 16)
+        item3 = opcon_common.NewOpConItem("Component1.PackageId", 987654321, 16)
 
         assert item1 == item2
         assert item1 != item3
@@ -232,7 +235,7 @@ class TestOpConItem:
         VALID_DATA_TYPES = [2, 3, 4, 5, 7, 8, 11, 14, 16, 17, 18, 19, 20, 21]
 
         for data_type in VALID_DATA_TYPES:
-            testItem = NewOpConItem("Test.Item", "TestValue", data_type)
+            testItem = opcon_common.NewOpConItem("Test.Item", "TestValue", data_type)
             updatedTelegram = testItem.update(self.telegram)
             updatedTelegram = ET.fromstring(updatedTelegram)
             targetNode = updatedTelegram.find("body/items/item[@name='Test.Item']")
@@ -241,7 +244,7 @@ class TestOpConItem:
             assert targetNode.get("dataType") == str(data_type)
 
     def test_opcon_item_update_no_data_type(self):
-        testItem = NewOpConItem("Test.Item", "TestValue")
+        testItem = opcon_common.NewOpConItem("Test.Item", "TestValue")
         updatedTelegram = testItem.update(self.telegram)
         updatedTelegram = ET.fromstring(updatedTelegram)
         targetNode = updatedTelegram.find("body/items/item[@name='Test.Item']")
@@ -250,7 +253,7 @@ class TestOpConItem:
         assert targetNode.get("dataType") is None
 
     def test_opcon_item_update_existing_item(self):
-        testItem = NewOpConItem("routeList", "testRouteList", 16)
+        testItem = opcon_common.NewOpConItem("routeList", "testRouteList", 16)
         updatedTelegram = testItem.update(self.telegram)
         updatedTelegram = ET.fromstring(updatedTelegram)
         numChildItems = len(updatedTelegram.findall("body/items/item"))
@@ -264,4 +267,4 @@ class TestOpConItem:
         invlid_data_types = [1, 6, 9, 10]
         for dataType in invlid_data_types:
             with pytest.raises(ValueError, match=f"Invalid dataType: {dataType}"):
-                NewOpConItem("Test.Item", "TestValue", dataType)
+                opcon_common.NewOpConItem("Test.Item", "TestValue", dataType)
