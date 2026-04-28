@@ -268,3 +268,55 @@ class TestOpConItem:
         for dataType in invlid_data_types:
             with pytest.raises(ValueError, match=f"Invalid dataType: {dataType}"):
                 opcon_common.NewOpConItem("Test.Item", "TestValue", dataType)
+
+
+class TestOpConMaterialItems:
+    def test_opcon_material_items(self):
+        SUPPLIER_ID = "1111122222"
+        BATCH_1 = "TestBatch1"
+        BATCH_2 = "TestBatch2"
+        BATCH_COUNTER = 50
+        EXPIRATION_DATE = "20501231"
+        MANUFACTURER = "TestManufacturer"
+
+        items = list(
+            opcon_common.NewOpConMaterialItems(
+                f"""[)>@06@12S0002@P8638123456@1P1605679@31P1605679@12V{MANUFACTURER}@10VAUT-KORNEUBURG@2P08@20P@6D20240305@14D{EXPIRATION_DATE}@30PY@Z1@K0@16K0@V{SUPPLIER_ID}@3SB444444748549@Q28NAR000@20T{BATCH_COUNTER}@1T{BATCH_1}@2T{BATCH_2}@1Z@@"""
+            )
+        )
+
+        supplierIdItem = next(
+            (item for item in items if item.name == "Component1.SupplierId"), None
+        )
+        assert supplierIdItem is not None
+        assert supplierIdItem.value == SUPPLIER_ID
+
+        batch1Item = next(
+            (item for item in items if item.name == "Component1.Batch1"), None
+        )
+        assert batch1Item is not None
+        assert batch1Item.value == BATCH_1
+
+        batch2Item = next(
+            (item for item in items if item.name == "Component1.Batch2"), None
+        )
+        assert batch2Item is not None
+        assert batch2Item.value == BATCH_2
+
+        batchCounterItem = next(
+            (item for item in items if item.name == "Component1.BatchCounter"), None
+        )
+        assert batchCounterItem is not None
+        assert int(batchCounterItem.value) == BATCH_COUNTER
+
+        expirationDateItem = next(
+            (item for item in items if item.name == "Component1.ExpirationDate"), None
+        )
+        assert expirationDateItem is not None
+        assert expirationDateItem.value == EXPIRATION_DATE
+
+        manufacturerItem = next(
+            (item for item in items if item.name == "Component1.Manufacturer"), None
+        )
+        assert manufacturerItem is not None
+        assert manufacturerItem.value == MANUFACTURER

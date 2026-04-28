@@ -484,6 +484,7 @@ def NewOpConItem(name, value=None, dataType=None) -> OpConItem:
 
 
 def NewOpConMaterialItems(label, labelType=LabelType.MAT):
+
     class MaterialItem:
         def __init__(self, valuePrefix, itemName, itemDefaultValue, itemDataType):
             self._valuePrefix = valuePrefix
@@ -552,8 +553,7 @@ def NewOpConMaterialItems(label, labelType=LabelType.MAT):
         materials.append(MaterialItem("@2P(.*)@20P", "Component1.TypeVar", "", 8))
         materials.append(MaterialItem("", "labelFormat", "2", 3))
         materials.append(MaterialItem("@12S(.*)@P", "labelVersion", "2", 3))
-
-    if labelType == LabelType.GTL:
+    elif labelType == LabelType.GTL:
         materials.append(MaterialItem("1T(.*)Q", "Component1.Batch1", "", 8))
         materials.append(MaterialItem("", "Component1.Batch2", "", 8))
         materials.append(MaterialItem("", "Component1.BatchCounter", "0", 3))
@@ -580,10 +580,15 @@ def NewOpConMaterialItems(label, labelType=LabelType.MAT):
         materials.append(MaterialItem("", "labelFormat", "2", 3))
         materials.append(MaterialItem("", "labelVersion", "4992", 3))
         materials.append(MaterialItem("13V(.*)7Q", "Component1.SupplierIdDUNS", "", 8))
-
+    else:
+        raise ValueError("Invalid labelType")
+    
     for mat in materials:
-        m = re.match(mat.valuePrefix, label)
-        v = m.group(1) if m else mat.itemDefaultValue
+        v = mat.itemDefaultValue
+        if mat.valuePrefix:
+            m = re.search(mat.valuePrefix, label)
+            if m is not None and m.lastindex and m.lastindex >= 1:
+                v = m.group(1)
         yield NewOpConItem(name=mat.itemName, value=v, dataType=mat.itemDataType)
 
 
