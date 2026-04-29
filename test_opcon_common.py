@@ -271,17 +271,34 @@ class TestOpConItem:
 
 
 class TestOpConMaterialItems:
-    def test_opcon_material_items(self):
+    def test_opcon_material_items_mat_label(self):
         SUPPLIER_ID = "1111122222"
         BATCH_1 = "TestBatch1"
         BATCH_2 = "TestBatch2"
         BATCH_COUNTER = 50
         EXPIRATION_DATE = "20501231"
         MANUFACTURER = "TestManufacturer"
+        MANUFACTURER_LOCATION = "AUT-KORNEUBURG"
+        MANUFACTURER_TYPE_NO = "123456789"
+        MSL_LEVEL = 5
+        ORDERING_NO = "987654321"
+        PACKAGE_ID = "B555666444"
+        PART_ADD_INFO = "TestPartAddInfo"
+        PRODUCTION_DATE = "20240101"
+        PURCHASE_ORDER_NO = "V465"
+        QUANTITY = 100
+        QUANTITY_UNIT = "NAR"
+        QUANTITY_FLOAT = 500
+        ROHS = "Y"
+        SHIPPING_NOTE_NO = "SN1234567890"
+        SUPPLIER_DATA = "TestSupplierData"
+        TYPE_NO = "1234567890"
+        TYPE_VAR = "08"
+        LABEL_VERSION = "0002"
 
         items = list(
             opcon_common.NewOpConMaterialItems(
-                f"""[)>@06@12S0002@P8638123456@1P1605679@31P1605679@12V{MANUFACTURER}@10VAUT-KORNEUBURG@2P08@20P@6D20240305@14D{EXPIRATION_DATE}@30PY@Z1@K0@16K0@V{SUPPLIER_ID}@3SB444444748549@Q28NAR000@20T{BATCH_COUNTER}@1T{BATCH_1}@2T{BATCH_2}@1Z@@"""
+                f"""[)>@06@12S{LABEL_VERSION}@P{TYPE_NO}@1P{MANUFACTURER_TYPE_NO}@31P{ORDERING_NO}@12V{MANUFACTURER}@10V{MANUFACTURER_LOCATION}@2P{TYPE_VAR}@20P{PART_ADD_INFO}@6D{PRODUCTION_DATE}@14D{EXPIRATION_DATE}@30P{ROHS}@Z{MSL_LEVEL}@K{PURCHASE_ORDER_NO}@16K{SHIPPING_NOTE_NO}@V{SUPPLIER_ID}@3S{PACKAGE_ID}@Q{QUANTITY}{QUANTITY_UNIT}{QUANTITY_FLOAT}@20T{BATCH_COUNTER}@1T{BATCH_1}@2T{BATCH_2}@1Z{SUPPLIER_DATA}@@"""
             )
         )
 
@@ -320,3 +337,223 @@ class TestOpConMaterialItems:
         )
         assert manufacturerItem is not None
         assert manufacturerItem.value == MANUFACTURER
+
+        manufacturerLocationItem = next(
+            (item for item in items if item.name == "Component1.ManufacturerLocation"),
+            None,
+        )
+        assert manufacturerLocationItem is not None
+        assert manufacturerLocationItem.value == MANUFACTURER_LOCATION
+
+        manufacturerTypeNoItem = next(
+            (item for item in items if item.name == "Component1.ManufacturerTypeNo"),
+            None,
+        )
+        assert manufacturerTypeNoItem is not None
+        assert manufacturerTypeNoItem.value == MANUFACTURER_TYPE_NO
+
+        mslLevelItem = next(
+            (item for item in items if item.name == "Component1.MsLevel"), None
+        )
+        assert mslLevelItem is not None
+        assert int(mslLevelItem.value) == MSL_LEVEL
+
+        orderingNoItem = next(
+            (item for item in items if item.name == "Component1.OrderingNo"), None
+        )
+        assert orderingNoItem is not None
+        assert orderingNoItem.value == ORDERING_NO
+
+        packageIdItem = next(
+            (item for item in items if item.name == "Component1.PackageId"), None
+        )
+        assert packageIdItem is not None
+        assert packageIdItem.value == PACKAGE_ID
+
+        partAddInfoItem = next(
+            (item for item in items if item.name == "Component1.PartAddInfo"), None
+        )
+        assert partAddInfoItem is not None
+        assert partAddInfoItem.value == PART_ADD_INFO
+
+        productionDateItem = next(
+            (item for item in items if item.name == "Component1.ProductionDate"), None
+        )
+        assert productionDateItem is not None
+        assert productionDateItem.value == PRODUCTION_DATE
+
+        purchaseOrderNoItem = next(
+            (item for item in items if item.name == "Component1.PurchaseOrderNo"), None
+        )
+        assert purchaseOrderNoItem is not None
+        assert purchaseOrderNoItem.value == PURCHASE_ORDER_NO
+
+        # FIXME: Update logic to handle the decimal part
+        quantityItem = next(
+            (item for item in items if item.name == "Component1.Quantity"), None
+        )
+        assert quantityItem is not None
+        assert int(quantityItem.value) == QUANTITY
+
+        quantityUnitItem = next(
+            (item for item in items if item.name == "Component1.QuantityUnit"), None
+        )
+        assert quantityUnitItem is not None
+        assert quantityUnitItem.value == QUANTITY_UNIT
+
+        rohsItem = next(
+            (item for item in items if item.name == "Component1.RoHS"), None
+        )
+        assert rohsItem is not None
+        assert rohsItem.value == ROHS
+
+        shippingNoteNoItem = next(
+            (item for item in items if item.name == "Component1.ShippingNoteNo"), None
+        )
+        assert shippingNoteNoItem is not None
+        assert shippingNoteNoItem.value == SHIPPING_NOTE_NO
+
+        supplierDataItem = next(
+            (item for item in items if item.name == "Component1.SupplierData"), None
+        )
+        assert supplierDataItem is not None
+        assert supplierDataItem.value == SUPPLIER_DATA
+
+        typeNoItem = next(
+            (item for item in items if item.name == "Component1.TypeNo"), None
+        )
+        assert typeNoItem is not None
+        assert typeNoItem.value == TYPE_NO
+
+        typeVarItem = next(
+            (item for item in items if item.name == "Component1.TypeVar"), None
+        )
+        assert typeVarItem is not None
+        assert typeVarItem.value == TYPE_VAR
+
+        labelVersionItem = next(
+            (item for item in items if item.name == "labelVersion"), None
+        )
+        assert labelVersionItem is not None
+        assert labelVersionItem.value == LABEL_VERSION
+
+    def test_opcon_material_items_gtl_label(self):
+        BATCH_1 = "TestBatch1"
+        EXPIRATION_DATE = "20251229"
+        MANUFACTURER = "TestManufacturer"
+        MANUFACTURER_TYPE_NO = "123456789"
+        ORDERING_NO = "987654321"
+        PACKAGE_ID = "UNFAS3BRG826000063419"
+        PART_ADD_INFO = "TestPartAddInfo"
+        PRODUCTION_DATE = "20240101"
+        QUANTITY = 129
+        QUANTITY_UNIT = "EA"
+        SHIPPING_NOTE_NO = "SN1234567890"
+        GROSS_WEIGHT_KG = 5.0
+        SUPPLIER_ID = "097135674"
+        TYPE_NO = "1234567890"
+        TYPE_VAR = "08"
+        SUPPLIER_ID_DUNS = "097135674"
+
+        items = list(
+            opcon_common.NewOpConMaterialItems(
+                f"""[)>0612PGTL39K121J{PACKAGE_ID}14D{EXPIRATION_DATE}16D{PRODUCTION_DATE}P{TYPE_NO}2P{TYPE_VAR}1T{BATCH_1}Q{QUANTITY}3Q{QUANTITY_UNIT}K{ORDERING_NO}4K0012SGY202212310115K123V{SUPPLIER_ID}13V{SUPPLIER_ID_DUNS}7Q{GROSS_WEIGHT_KG}2K{SHIPPING_NOTE_NO}23P{PART_ADD_INFO}30PNA12V{MANUFACTURER}1P{MANUFACTURER_TYPE_NO}33TY
+                """, labelType=opcon_common.LabelType.GTL
+            )
+        )
+
+        batch1Item = next(
+            (item for item in items if item.name == "Component1.Batch1"), None
+        )
+        assert batch1Item is not None
+        assert batch1Item.value == BATCH_1
+        
+        expirationDateItem = next(
+            (item for item in items if item.name == "Component1.ExpirationDate"), None
+        )
+        assert expirationDateItem is not None
+        assert expirationDateItem.value == EXPIRATION_DATE
+
+        manufacturerItem = next(
+            (item for item in items if item.name == "Component1.Manufacturer"), None
+        )
+        assert manufacturerItem is not None
+        assert manufacturerItem.value == MANUFACTURER 
+
+        manufacturerTypeNoItem = next(
+            (item for item in items if item.name == "Component1.ManufacturerTypeNo"), None,
+        )
+        assert manufacturerTypeNoItem is not None
+        assert manufacturerTypeNoItem.value == MANUFACTURER_TYPE_NO
+
+        orderingNoItem = next(
+            (item for item in items if item.name == "Component1.OrderingNo"), None
+        )
+        assert orderingNoItem is not None
+        assert orderingNoItem.value == ORDERING_NO
+
+        packageIdItem = next(
+            (item for item in items if item.name == "Component1.PackageId"), None
+        )
+        assert packageIdItem is not None
+        assert packageIdItem.value == PACKAGE_ID
+
+        partAddInfoItem = next(
+            (item for item in items if item.name == "Component1.PartAddInfo"), None
+        )
+        assert partAddInfoItem is not None
+        assert partAddInfoItem.value == PART_ADD_INFO
+
+        productionDateItem = next(
+            (item for item in items if item.name == "Component1.ProductionDate"), None
+        )
+        assert productionDateItem is not None
+        assert productionDateItem.value == PRODUCTION_DATE
+
+        quantityItem = next(
+            (item for item in items if item.name == "Component1.Quantity"), None
+        )
+        assert quantityItem is not None
+        assert int(quantityItem.value) == QUANTITY
+
+        quantityUnitItem = next(
+            (item for item in items if item.name == "Component1.QuantityUnit"), None
+        )
+        assert quantityUnitItem is not None
+        assert quantityUnitItem.value == QUANTITY_UNIT
+
+        shippingNoteNoItem = next(
+            (item for item in items if item.name == "Component1.ShippingNoteNo"), None
+        )
+        assert shippingNoteNoItem is not None
+        assert shippingNoteNoItem.value == SHIPPING_NOTE_NO
+
+        grossWeightKgItem = next(
+            (item for item in items if item.name == "Component1.GrossWeightKg"), None
+        )
+        assert grossWeightKgItem is not None
+        assert float(grossWeightKgItem.value) == GROSS_WEIGHT_KG
+
+        supplierIdItem = next(
+            (item for item in items if item.name == "Component1.SupplierId"), None
+        )
+        assert supplierIdItem is not None
+        assert supplierIdItem.value == SUPPLIER_ID
+
+        typeNoItem = next(
+            (item for item in items if item.name == "Component1.TypeNo"), None
+        )
+        assert typeNoItem is not None
+        assert typeNoItem.value == TYPE_NO
+
+        typeVarItem = next(
+            (item for item in items if item.name == "Component1.TypeVar"), None
+        )
+        assert typeVarItem is not None
+        assert typeVarItem.value == TYPE_VAR
+
+        supplierIdDunsItem = next(
+            (item for item in items if item.name == "Component1.SupplierIdDUNS"), None
+        )
+        assert supplierIdDunsItem is not None
+        assert supplierIdDunsItem.value == SUPPLIER_ID_DUNS

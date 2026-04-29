@@ -534,10 +534,10 @@ def NewOpConMaterialItems(label, labelType=LabelType.MAT):
             MaterialItem("@K(.*)@16K", "Component1.PurchaseOrderNo", "", 8)
         )
         materials.append(
-            MaterialItem("@Q(\\d*)\\D*\\d*@20T", "Component1.Quantity", "0.0", 5)
+            MaterialItem("@Q(\\d*)\\D*(\\d*)@20T", "Component1.Quantity", "0.0", 5)
         )
         materials.append(
-            MaterialItem("@Q(\\d*)\\D*\\d*@20T", "Component1.QuantityRaw", "0.0", 5)
+            MaterialItem("@Q(\\d*)\\D*(\\d*)@20T", "Component1.QuantityRaw", "0.0", 5)
         )
         materials.append(
             MaterialItem("@Q\\d*(\\D*)\\d*@20T", "Component1.QuantityUnit", "", 8)
@@ -577,6 +577,7 @@ def NewOpConMaterialItems(label, labelType=LabelType.MAT):
         materials.append(MaterialItem("V(.*)13V", "Component1.SupplierId", "", 8))
         materials.append(MaterialItem("P(.*)2P", "Component1.TypeNo", "", 8))
         materials.append(MaterialItem("2P(.*)1T", "Component1.TypeVar", "", 8))
+        materials.append(MaterialItem("7Q(.*)2K", "Component1.GrossWeightKg", "", 8))
         materials.append(MaterialItem("", "labelFormat", "2", 3))
         materials.append(MaterialItem("", "labelVersion", "4992", 3))
         materials.append(MaterialItem("13V(.*)7Q", "Component1.SupplierIdDUNS", "", 8))
