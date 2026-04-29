@@ -467,7 +467,7 @@ class TestOpConMaterialItems:
         )
         assert batch1Item is not None
         assert batch1Item.value == BATCH_1
-        
+
         expirationDateItem = next(
             (item for item in items if item.name == "Component1.ExpirationDate"), None
         )
@@ -478,7 +478,7 @@ class TestOpConMaterialItems:
             (item for item in items if item.name == "Component1.Manufacturer"), None
         )
         assert manufacturerItem is not None
-        assert manufacturerItem.value == MANUFACTURER 
+        assert manufacturerItem.value == MANUFACTURER
 
         manufacturerTypeNoItem = next(
             (item for item in items if item.name == "Component1.ManufacturerTypeNo"), None,
@@ -557,3 +557,190 @@ class TestOpConMaterialItems:
         )
         assert supplierIdDunsItem is not None
         assert supplierIdDunsItem.value == SUPPLIER_ID_DUNS
+
+    def test_invalid_label_type(self):
+        with pytest.raises(ValueError, match="Invalid labelType"):
+            list(
+                opcon_common.NewOpConMaterialItems(
+                    """[)>@06@12S0002@P1234567890@1P123456789
+                    @31P987654321@12VTestManufacturer
+                    @10VTestManufacturerLocation@2P08
+                    @20PTestPartAddInfo@6D20240101@14D20251231
+                    @30PY@Z5@K987654321@16KSN1234567890
+                    @V1111122222@3SUNFAS3BRG826000063419
+                    @Q100NAR500.0@20T50@1TTestBatch1@2TTestBatch2
+                    @1ZTestSupplierData@@""",
+                    labelType="InvalidType",  # type: ignore
+                )
+            )
+
+
+class TestOpConStructArray:
+    @pytest.fixture(autouse=True)
+    def set_up_method(self):
+        f = open("telegrams/OpCon.Tests.Telegram.xml", "r")
+        self.telegram = f.read()
+        f.close()
+
+    def test_opcon_struct_array(self):
+        structArray = opcon_common.NewOpConStructArray("TestStructArray")
+        assert structArray.name == "TestStructArray"
+        assert structArray.data == []
+        assert structArray.structDef == []
+
+    def test_opcon_struct_array_update(self):
+        struct_array = opcon_common.NewOpConStructArray("results")
+        struct_array.data = {
+            "selectors": {
+                "pos": "1"
+                },
+            "attributes": {
+                "result": "TestResult",
+                "nioBits": "100",
+                "identifier": "TestIdentifier",
+                "targetIdx": "5",
+                "state": "TestState"
+                },
+        }
+        updated_telegram = struct_array.update(self.telegram)
+        assert updated_telegram is not None
+
+        updated_telegram = ET.fromstring(updated_telegram.decode("utf-8"))
+        targetNode = updated_telegram.find("body/structArrays/array[@name='results']/values/item[@pos='1']")
+
+        assert targetNode is not None
+        assert targetNode.get("result") == "TestResult"
+        assert targetNode.get("nioBits") == "100"
+        assert targetNode.get("identifier") == "TestIdentifier"
+        assert targetNode.get("targetIdx") == "5"
+        assert targetNode.get("state") == "TestState"
+
+    def test_opcon_struct_array_identifier_update(self):
+        struct_array = opcon_common.NewOpConStructArray("results")
+        struct_array.data = {
+            "selectors": {
+                "identifier": "PLS1SZxMILx1023"
+                },
+            "attributes": {
+                "pos": "10",
+                "result": "TestResult2",
+                "nioBits": "200",
+                "targetIdx": "15",
+                "state": "TestState1"
+                },
+        }
+        updated_telegram = struct_array.update(self.telegram)
+        assert updated_telegram is not None
+
+        updated_telegram = ET.fromstring(updated_telegram.decode("utf-8"))
+        targetNode = updated_telegram.find(
+            "body/structArrays/array[@name='results']/values/item[@identifier='PLS1SZxMILx1023']"
+            )
+
+        assert targetNode is not None
+        assert targetNode.get("pos") == "10"
+        assert targetNode.get("result") == "TestResult2"
+        assert targetNode.get("nioBits") == "200"
+        assert targetNode.get("targetIdx") == "15"
+        assert targetNode.get("state") == "TestState1"
+
+    def test_opcon_struct_array_no_matching_node(self):
+        struct_array = opcon_common.NewOpConStructArray("results")
+        struct_array.data = {
+            "selectors": {
+                "pos": "999"
+                },
+            "attributes": {
+                "result": "TestResult3",
+                "nioBits": "300",
+                "identifier": "TestIdentifier3",
+                "targetIdx": "25",
+                "state": "TestState3"
+                },
+        }
+        updated_telegram = struct_array.update(self.telegram)
+        assert updated_telegram is not None
+
+        updated_telegram = ET.fromstring(updated_telegram.decode("utf-8"))
+        targetNode = updated_telegram.find("body/structArrays/array[@name='results']/values/item[@pos='999']")
+
+        assert targetNode is None
+
+    def test_opcon_struct_array_equality(self):
+        struct_array1 = opcon_common.NewOpConStructArray("results")
+        struct_array1.data = {
+            "selectors": {
+                "pos": "1"
+                },
+            "attributes": {
+                "result": "TestResult",
+                "nioBits": "100",
+                "identifier": "TestIdentifier",
+                "targetIdx": "5",
+                "state": "TestState"
+                },
+        }
+
+        struct_array2 = opcon_common.NewOpConStructArray("results")
+        struct_array2.data = {
+            "selectors": {
+                "pos": "1"
+                },
+            "attributes": {
+                "result": "TestResult",
+                "nioBits": "100",
+                "identifier": "TestIdentifier",
+                "targetIdx": "5",
+                "state": "TestState"
+                },
+        }
+
+        struct_array3 = opcon_common.NewOpConStructArray("results")
+
+        assert struct_array1 == struct_array2
+        assert struct_array1 != struct_array3
+
+class TestOpConStructArrayValue:
+    @pytest.fixture(autouse=True)
+    def set_up_method(self):
+        f = open("telegrams/OpCon.Tests.Telegram.xml", "r")
+        self.telegram = f.read()
+        f.close()
+
+    def test_opcon_struct_array_value(self):
+        structArray = opcon_common.NewOpConStructArray("TestStructArray")
+        opcon_common.AddOpConStructArrayValue(structArray, {"pos": "1"}, {"result": "TestResult"})
+        opcon_common.AddOpConStructArrayValue(structArray, {"pos": "1"}, {"identifier": "testIdentifier"})
+        
+        assert len(structArray.data) == 2
+    
+    def test_opcon_struct_array_struct_definition(self):
+        structArray = opcon_common.NewOpConStructArray("TestStructArray")
+        opcon_common.AddOpConStructArrayStructDef(structArray, "a", "8")
+        opcon_common.AddOpConStructArrayStructDef(structArray, "b", "3")
+        opcon_common.AddOpConStructArrayStructDef(structArray, "c", "2")
+        opcon_common.AddOpConStructArrayStructDef(structArray, "d", "8")
+        opcon_common.AddOpConStructArrayStructDef(structArray, "e", "8")
+        opcon_common.AddOpConStructArrayStructDef(structArray, "f", "8")
+        opcon_common.AddOpConStructArrayStructDef(structArray, "g", "8")
+
+        assert len(structArray.structDef) == 7
+    
+    def test_opcon_struct_array_result(self):
+        structArray = opcon_common.NewOpConStructArray("results")
+        opcon_common.AddOpConStructArrayResult(
+            structArray, 
+            {"pos": "1"}, 
+            pos=10, 
+            result=4, 
+            nioBits=2, 
+            identifier="TestIdentifier", 
+            targetIdx=1, 
+            state=4
+        )
+
+        assert len(structArray.data) == 1
+        assert len(structArray.data[0].attributes.items()) == 6
+        telegram = structArray.update(self.telegram)
+        assert telegram is not None
+        print(telegram.decode("utf-8"))

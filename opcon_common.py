@@ -583,7 +583,7 @@ def NewOpConMaterialItems(label, labelType=LabelType.MAT):
         materials.append(MaterialItem("13V(.*)7Q", "Component1.SupplierIdDUNS", "", 8))
     else:
         raise ValueError("Invalid labelType")
-    
+
     for mat in materials:
         v = mat.itemDefaultValue
         if mat.valuePrefix:
@@ -629,7 +629,6 @@ class OpConStructArray:
         values = tree.find(f"body/structArrays/array[@name='{arrayName}']/values")
         if values is None:
             return
-
         for structData in self.data:
             for node in values:
                 has = True
@@ -660,7 +659,6 @@ class OpConStructArray:
 def NewOpConStructArray(name):
     structArray = OpConStructArray()
     structArray.name = name
-    structArray.data = []
     return structArray
 
 
@@ -691,7 +689,6 @@ def AddOpConStructArrayValue(structArray, selectors, attributes):
     structArrayValues.selectors = selectors
     structArrayValues.attributes = attributes
     structArray.data.append(structArrayValues)
-    return structArray
 
 
 def AddOpConStructArrayStructDef(structArray, name, dataType):
@@ -711,7 +708,7 @@ def AddOpConStructArrayResult(structArray, selectors, pos=1, result=1, nioBits=0
         "identifier": identifier,
         "targetIdx": targetIdx,
         "state": state
-        }
+    }
 
     structArray.data.append(structArrayValue)
     return structArray
