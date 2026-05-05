@@ -46,12 +46,12 @@ class OpConLocation:
         ProcessName=None,
         ProcessNo=None,
     ):
-        if (lineNo is not None) and ((lineNo < 0) or (lineNo > 9999)):
-            raise ValueError("lineNo must be between 0 and 9999")
-        if (statNo is not None) and ((statNo < 0) or (statNo > 9999)):
-            raise ValueError("statNo must be between 0 and 9999")
-        if (statIdx is not None) and ((statIdx < 0) or (statIdx > 9999)):
-            raise ValueError("statIdx must be between 0 and 9999")
+        if (lineNo is not None) and ((lineNo < 1) or (lineNo > 9999)):
+            raise ValueError("lineNo must be between 1 and 9999")
+        if (statNo is not None) and ((statNo < 1) or (statNo > 9999)):
+            raise ValueError("statNo must be between 1 and 9999")
+        if (statIdx is not None) and ((statIdx < 1) or (statIdx > 9999)):
+            raise ValueError("statIdx must be between 1 and 9999")
         if (fuNo is not None) and ((fuNo < 1) or (fuNo > 9)):
             raise ValueError("fuNo must be between 1 and 9")
         if (workPos is not None) and ((workPos < 1) or (workPos > 9999)):
@@ -75,8 +75,8 @@ class OpConLocation:
 
     @lineNo.setter
     def lineNo(self, lineNo):
-        if (lineNo < 0) or (lineNo > 9999):
-            raise ValueError("lineNo must be between 0 and 9999")
+        if (lineNo < 1) or (lineNo > 9999):
+            raise ValueError("lineNo must be between 1 and 9999")
         self._lineNo = lineNo
 
     @property
@@ -85,8 +85,8 @@ class OpConLocation:
 
     @statNo.setter
     def statNo(self, statNo):
-        if (statNo < 0) or (statNo > 9999):
-            raise ValueError("statNo must be between 0 and 9999")
+        if (statNo < 1) or (statNo > 9999):
+            raise ValueError("statNo must be between 1 and 9999")
         self._statNo = statNo
 
     @property
@@ -95,8 +95,8 @@ class OpConLocation:
 
     @statIdx.setter
     def statIdx(self, statIdx):
-        if (statIdx < 0) or (statIdx > 9999):
-            raise ValueError("statIdx must be between 0 and 9999")
+        if (statIdx < 1) or (statIdx > 9999):
+            raise ValueError("statIdx must be between 1 and 9999")
         self._statIdx = statIdx
 
     @property
@@ -252,12 +252,16 @@ class OpConEvent:
 
         if event_node is None:
             raise ValueError("Telegram does not contain an event node")
+        children = list(event_node)
+        if not children:
+            raise ValueError("Telegram event node does not contain any child nodes")
+        node = children[0]
         if self._identifier is not None:
-            event_node.set("identifier", self._identifier)
+            node.set("identifier", self._identifier)
         if self._typeNo is not None:
-            event_node.set("typeNo", self._typeNo)
+            node.set("typeNo", self._typeNo)
         if self._typeVar is not None:
-            event_node.set("typeVar", self._typeVar)
+            node.set("typeVar", self._typeVar)
         return ET.tostring(tree)
 
 
@@ -623,20 +627,36 @@ class OpConStructArray:
     def data(self, data):
         self._data.append(data)
 
-    def update(self, telegram):
+    def update_structDef(self, telegram) -> str:
         arrayName = self.name
         tree = ET.fromstring(telegram)
+        structDefNode = tree.find(f"body/structArrays/array[@name='{arrayName}']/structDef")
+        if structDefNode is None:
+            return ""
+
+        for structDef in self.structDef:
+            structDefNode.append(
+                ET.Element("item", {"name": structDef.attributes["name"], "dataType": str(structDef.attributes["dataType"])})
+                )
+
+        return ET.tostring(tree).decode("utf-8")
+
+    def update(self, telegram):
+        updated_telegram = self.update_structDef(telegram)
+        arrayName = self.name
+        tree = ET.fromstring(updated_telegram)
         values = tree.find(f"body/structArrays/array[@name='{arrayName}']/values")
         if values is None:
             return
+
         for structData in self.data:
             for node in values:
                 has = True
-                for selector, value in structData["selectors"].items():
+                for selector, value in structData.selectors.items():
                     has = has and (node.get(selector) == value)
 
                 if has:
-                    for attr, val in structData["attributes"].items():
+                    for attr, val in structData.attributes.items():
                         node.set(attr, val)
 
         return ET.tostring(tree)
@@ -688,17 +708,31 @@ def AddOpConStructArrayValue(structArray, selectors, attributes):
     structArrayValues = OpConStructArrayValue()
     structArrayValues.selectors = selectors
     structArrayValues.attributes = attributes
-    structArray.data.append(structArrayValues)
+    structArray.data = structArrayValues
 
 
 def AddOpConStructArrayStructDef(structArray, name, dataType):
     structArrayValues = OpConStructArrayValue()
     structArrayValues.attributes = {"name": name, "dataType": str(dataType)}
-    structArray.structDef.append(structArrayValues)
+    structArray.structDef = structArrayValues
     return structArray
 
 
-def AddOpConStructArrayResult(structArray, selectors, pos=1, result=1, nioBits=0, identifier=None, targetIdx=1, state=4):
+def AddOpConStructArrayResult(
+        structArray,
+        selectors,
+        pos="1",
+        result="1",
+        nioBits="0",
+        identifier=None,
+        targetIdx="1",
+        state="4"):
+    VALID_RESULTS = [0, 1, 2, 12]
+    VALID_STATES = [3, 4, 5, 12]
+    if int(result) not in VALID_RESULTS:
+        raise ValueError(f"result must be one of {VALID_RESULTS}")
+    if int(state) not in VALID_STATES:
+        raise ValueError(f"state must be one of {VALID_STATES}")
     structArrayValue = OpConStructArrayValue()
     structArrayValue.selectors = selectors
     structArrayValue.attributes = {
@@ -756,7 +790,7 @@ class OpConArray:
         arrayName = self.name
         tree = ET.fromstring(telegram)
         values = tree.find(f"body/{arrayName}")
-        valuesSubArray = tree.find(f"body/arrays/array[@name='{arrayName}']")
+        valuesSubArray = tree.find(f"body/structArrays/array[@name='{arrayName}']")
 
         if values is None or valuesSubArray is None:
             return
@@ -821,7 +855,6 @@ def NewOpConArray(name, dataType):
     opConArray = OpConArray()
     opConArray.name = name
     opConArray.dataType = dataType
-    opConArray.data = []
     return opConArray
 
 
@@ -829,7 +862,7 @@ def AddOpConArrayValue(array, selectors, attributes):
     arrayValue = OpConArrayValue()
     arrayValue.selectors = selectors
     arrayValue.attributes = attributes
-    array.data.append(arrayValue)
+    array.data = arrayValue
     return array
 
 
@@ -886,7 +919,7 @@ def NewOpConGroups(identifier, format, start=1, parts=0, count=0):
             partObject = OpConPart((j + 1), partIdentifier)
             partsArray.append(partObject)
         groupObject = OpConGroup(groupIdentifier, partsArray)
-        return groupObject
+        yield groupObject
 
 
 def GetOpConPartsInGroups(groups):
@@ -1042,8 +1075,15 @@ class OpConTestRule:
         tree = ET.fromstring(telegram)
         node = tree.find(self.xpath)
 
+        rule = OpConTestRuleResult()
+        rule.rule = self
+        rule.request = request
+        rule.response = telegram
+
         if node is None:
-            raise ValueError(f"XPath '{self.xpath}' did not match any nodes in the telegram")
+            rule.ok = (self.comparator == OpConTestComparator.Absent)
+            rule.value = ""
+            return rule
 
         val = self._get_node_value(node) or ""
         if self.value is None:
@@ -1053,10 +1093,6 @@ class OpConTestRule:
         if comparator_fn is None:
             raise ValueError(f"Unsupported comparator: {self.comparator}")
 
-        rule = OpConTestRuleResult()
-        rule.rule = self
-        rule.request = request
-        rule.response = telegram
         rule.ok = comparator_fn(val, self.value)
         rule.value = val
         return rule
@@ -1089,7 +1125,7 @@ def NewOpConTestRule(xpath, value, negative=None, eq=None, neq=None, contains=No
 
 
 def InvokeOpConTestRule(rule, request, response):
-    rule.execute(request, response)
+    return rule.execute(request, response)
 
 
 def GetOpConCommonTestRules():
