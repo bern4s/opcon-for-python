@@ -635,9 +635,10 @@ class OpConStructArray:
             return ""
 
         for structDef in self.structDef:
-            structDefNode.append(
-                ET.Element("item", {"name": structDef.attributes["name"], "dataType": str(structDef.attributes["dataType"])})
-                )
+            structDefNode.append(ET.Element("item", {
+                "name": structDef.attributes["name"],
+                "dataType": str(structDef.attributes["dataType"])
+            }))
 
         return ET.tostring(tree).decode("utf-8")
 
