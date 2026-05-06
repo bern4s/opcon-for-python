@@ -1182,7 +1182,11 @@ def GetOpConItem(telegram, name):
     if node is None:
         return None
 
-    return OpConItem(name=node.get("name"), value=node.get("value"), dataType=node.get("dataType"))
+    dataType = node.get("dataType")
+    if dataType is not None:
+        dataType = int(dataType)
+
+    return OpConItem(name=node.get("name"), value=node.get("value"), dataType=dataType)
 
 
 def GetOpConArray(telegram, name):
@@ -1209,7 +1213,7 @@ def GetOpConArray(telegram, name):
 
 def GetOpConStructArray(telegram, name):
     tree = ET.fromstring(telegram)
-    node = tree.find(f"/root/body/structArrays/array[@name='{name}']")
+    node = tree.find(f"body/structArrays/array[@name='{name}']")
 
     if node is None:
         return None
@@ -1217,7 +1221,7 @@ def GetOpConStructArray(telegram, name):
     array = OpConStructArray(name=node.get("name"))
 
     attrNames = []
-    sd = node.findall(f"/root/body/structArrays/array[@name='{name}']/structDef/item")
+    sd = node.findall("structDef/item")
 
     for i in range(len(sd) - 1, -1, -1):
         arrayValue = OpConStructArrayValue()
@@ -1228,7 +1232,7 @@ def GetOpConStructArray(telegram, name):
         arrayValue.attributes = {"name": itemName, "dataType": itemDataType}
         array.structDef.append(arrayValue)
 
-    v = tree.findall(f"/root/body/structArrays/array[@name='{name}']/values/item")
+    v = tree.findall(f"body/structArrays/array[@name='{name}']/values/item")
     for item in v:
         arrayValue = OpConStructArrayValue()
         arrayValue.attributes = {}
