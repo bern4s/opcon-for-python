@@ -704,6 +704,11 @@ class OpConStructArrayValue:
     def attributes(self, attributes):
         self._attributes = attributes
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, OpConStructArrayValue):
+            return False
+        return self.selectors == other.selectors and self.attributes == other.attributes
+
 
 def AddOpConStructArrayValue(structArray, selectors, attributes):
     structArrayValues = OpConStructArrayValue()
